@@ -1,6 +1,6 @@
 Start-Transcript -Path "C:\Temp\dell_cleanup_log.txt" -Append
 
-# Programs we want removed
+# Bloat that deskside was cool with removing, add or subtract them here iyw
 $Bloatware = @(
 "Dell Core Services",
 "Dell Pair",
@@ -50,5 +50,6 @@ foreach ($Target in $Bloatware) {
         Write-Host "$Target not found."
     }
 }
+
 
 Stop-Transcript

@@ -1,18 +1,18 @@
-# V1.5, Ensure log folder exists
-New-Item -ItemType Directory -Path "C:\Temp" -Force | Out-Null
-
 Start-Transcript -Path "C:\Temp\dell_cleanup_log.txt" -Append
 
-Write-Host "Starting Dell cleanup script..."
-
-# Programs deskside listed as removeable
+# Programs we want removed
 $Bloatware = @(
 "Dell Core Services",
 "Dell Pair",
 "Dell SupportAssist OS Recovery Plugin",
 "Dell SupportAssist Remediation",
 "Dell Trusted Device",
-"Intel(R) Computing Improvement Program"
+"Intel(R) Computing Improvement Program",
+"Microsoft 365 - fr-fr",
+"Microsoft 365 - pt-br",
+"Microsoft OneNote - es-es",
+"Microsoft OneNote - fr-fr",
+"Microsoft OneNote - pt-br"
 )
 
 # Registry uninstall paths
@@ -22,6 +22,11 @@ $UninstallPaths = @(
 )
 
 $InstalledApps = Get-ItemProperty $UninstallPaths | Where-Object { $_.DisplayName }
+
+Write-Host "Stopping Dell Pair processes..."
+
+Get-Process | Where-Object {$_.ProcessName -like "*Dell*Pair*"} |
+Stop-Process -Force -ErrorAction SilentlyContinue
 
 foreach ($Target in $Bloatware) {
 
@@ -52,46 +57,10 @@ foreach ($Target in $Bloatware) {
             }
         }
 
-    } else {
+    } 
+    else {
         Write-Host "$Target not found."
     }
 }
-
-Write-Host "Checking for Dell Pair leftovers..."
-
-# Remove Dell Pair scheduled tasks
-Get-ScheduledTask | Where-Object {$_.TaskName -like "*Dell*Pair*"} | ForEach-Object {
-    Write-Host "Removing scheduled task: $($_.TaskName)"
-    Unregister-ScheduledTask -TaskName $_.TaskName -Confirm:$false
-}
-
-# Remove leftover Dell Pair folder, should fully uninstall now?
-$DellPairPath = "C:\Program Files\Dell\DellPair"
-
-if (Test-Path $DellPairPath) {
-    Write-Host "Removing leftover Dell Pair folder..."
-    Remove-Item $DellPairPath -Recurse -Force -ErrorAction SilentlyContinue
-}
-
-Write-Host "Removing Microsoft language packs..."
-
-# Remove language packs silently
-$languages = @(
-"fr-FR",
-"pt-BR",
-"es-ES"
-)
-
-foreach ($lang in $languages) {
-
-    Write-Host "Attempting to remove language pack $lang"
-
-    Start-Process "lpksetup.exe" `
-        -ArgumentList "/u $lang /quiet /norestart" `
-        -WindowStyle Hidden `
-        -Wait
-}
-
-Write-Host "Cleanup script finished."
 
 Stop-Transcript

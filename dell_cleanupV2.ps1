@@ -1,6 +1,7 @@
+New-Item -ItemType Directory -Path "C:\Temp" -Force | Out-Null
 Start-Transcript -Path "C:\Temp\dell_cleanup_log.txt" -Append
 
-# Programs we want removed
+# Programs Deskside Listed to Remove, can add/remove
 $Bloatware = @(
 "Dell Core Services",
 "Dell Pair",
@@ -20,16 +21,14 @@ $InstalledApps = Get-ItemProperty $UninstallPaths | Where-Object { $_.DisplayNam
 
 Write-Host "Stopping Dell Pair processes..."
 
-Get-Process | Where-Object {$_.ProcessName -like "*Dell*Pair*"} |
+Get-Process "*Dell*Pair*" -ErrorAction SilentlyContinue
 Stop-Process -Force -ErrorAction SilentlyContinue
 
-foreach ($Target in $Bloatware) {
+foreach ($App in $InstalledApps) {
 
-    $Matches = $InstalledApps | Where-Object { $_.DisplayName -like "*$Target*" }
+    foreach ($Target in $Bloatware) {
 
-    if ($Matches) {
-
-        foreach ($App in $Matches) {
+        if ($App.DisplayName -like "*$Target*") {
 
             Write-Host "Removing $($App.DisplayName)..."
 
@@ -38,23 +37,28 @@ foreach ($Target in $Bloatware) {
                 $UninstallCmd = $App.UninstallString
 
                 if ($UninstallCmd -match "msiexec") {
+
                     $UninstallCmd = $UninstallCmd -replace "/I","/X"
                     $UninstallCmd += " /quiet /norestart"
+
+                    Start-Process "cmd.exe" `
+                        -ArgumentList "/c $UninstallCmd" `
+                        -WindowStyle Hidden `
+                        -Wait
+                }
+                else {
+
+                    $SilentCmd = "$UninstallCmd /S /silent /quiet /norestart"
+
+                    Start-Process "cmd.exe" `
+                        -ArgumentList "/c $SilentCmd" `
+                        -WindowStyle Hidden `
+                        -Wait
                 }
 
-                Start-Process "cmd.exe" `
-                    -ArgumentList "/c $UninstallCmd" `
-                    -WindowStyle Hidden `
-                    -Wait
-            }
-            else {
-                Write-Host "No uninstall command found for $($App.DisplayName)"
+                break
             }
         }
-
-    } 
-    else {
-        Write-Host "$Target not found."
     }
 }
 

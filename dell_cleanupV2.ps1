@@ -7,12 +7,7 @@ $Bloatware = @(
 "Dell SupportAssist OS Recovery Plugin",
 "Dell SupportAssist Remediation",
 "Dell Trusted Device",
-"Intel(R) Computing Improvement Program",
-"Microsoft 365 - fr-fr",
-"Microsoft 365 - pt-br",
-"Microsoft OneNote - es-es",
-"Microsoft OneNote - fr-fr",
-"Microsoft OneNote - pt-br"
+"Intel(R) Computing Improvement Program"
 )
 
 # Registry uninstall paths

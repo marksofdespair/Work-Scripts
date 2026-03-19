@@ -8,8 +8,6 @@ $Bloatware = @(
 "Dell SupportAssist OS Recovery Plugin",
 "Dell SupportAssist Remediation",
 "Dell Trusted Device",
-"Dell Optimizer",
-"Dell Optimizer Core",
 "Intel(R) Computing Improvement Program"
 )
 
@@ -21,33 +19,12 @@ $UninstallPaths = @(
 
 $InstalledApps = Get-ItemProperty $UninstallPaths | Where-Object { $_.DisplayName }
 
-Write-Host "Stopping Dell-related processes..."
+Write-Host "Stopping Dell Pair processes..."
 
-$ProcessesToStop = @(
-"*Dell*Pair*",
-"*Dell*Optimizer*"
-)
+$DellPairProcesses = Get-Process "*Dell*Pair*" -ErrorAction SilentlyContinue
 
-foreach ($pattern in $ProcessesToStop) {
-    $procs = Get-Process $pattern -ErrorAction SilentlyContinue
-    if ($procs) {
-        $procs | Stop-Process -Force
-    }
-}
-
-# Me and the homies hate dell pair
-Write-Host "Attempting direct uninstall of Dell Pair..."
-
-$DellPairUninstaller = "C:\Program Files\Dell\Dell Pair\Uninstall.exe"
-
-if (Test-Path $DellPairUninstaller) {
-
-    Start-Process $DellPairUninstaller `
-        -ArgumentList "/S /silent /quiet /norestart" `
-        -WindowStyle Hidden `
-        -Wait
-
-    Write-Host "Dell Pair uninstall command executed."
+if ($DellPairProcesses) {
+    $DellPairProcesses | Stop-Process -Force
 }
 
 foreach ($App in $InstalledApps) {

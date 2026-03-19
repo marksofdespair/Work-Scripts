@@ -35,19 +35,26 @@ foreach ($pattern in $ProcessesToStop) {
     }
 }
 
-# Me and the homies hate dell pair
-Write-Host "Attempting direct uninstall of Dell Pair..."
+# Me and the homies hate dell pair AND dell optimizer
+Write-Host "Running direct uninstallers..."
 
-$DellPairUninstaller = "C:\Program Files\Dell\Dell Pair\Uninstall.exe"
+$DirectUninstallers = @(
+"C:\Program Files\Dell\Dell Pair\Uninstall.exe",
+"C:\Program Files\Dell\Dell Optimizer\uninstall.exe",
+"C:\Program Files\Dell\Dell Optimizer Core\uninstall.exe"
+)
 
-if (Test-Path $DellPairUninstaller) {
+foreach ($uninstaller in $DirectUninstallers) {
 
-    Start-Process $DellPairUninstaller `
-        -ArgumentList "/S /silent /quiet /norestart" `
-        -WindowStyle Hidden `
-        -Wait
+    if (Test-Path $uninstaller) {
 
-    Write-Host "Dell Pair uninstall command executed."
+        Write-Host "Executing $uninstaller"
+
+        Start-Process $uninstaller `
+            -ArgumentList "/S /silent /quiet /norestart" `
+            -WindowStyle Hidden `
+            -Wait
+    }
 }
 
 foreach ($App in $InstalledApps) {
@@ -74,10 +81,9 @@ foreach ($App in $InstalledApps) {
                 }
                 else {
 
-                    $SilentCmd = "$UninstallCmd /S /silent /quiet /norestart"
-
+                    # For handling .exe uninstallers because they're annoying
                     Start-Process "cmd.exe" `
-                        -ArgumentList "/c $SilentCmd" `
+                        -ArgumentList "/c `"$UninstallCmd /S /silent /quiet /norestart`"" `
                         -WindowStyle Hidden `
                         -Wait
                 }
@@ -87,5 +93,29 @@ foreach ($App in $InstalledApps) {
         }
     }
 }
+
+Write-Host "Cleaning up leftover Dell directories..."
+
+$CleanupPaths = @(
+"C:\Program Files\Dell\DellOptimizer",
+"C:\Program Files\Dell\Dell Optimizer",
+"C:\Program Files\Dell\Dell Optimizer Core"
+)
+
+foreach ($path in $CleanupPaths) {
+
+    if (Test-Path $path) {
+
+        Write-Host "Removing leftover folder: $path"
+
+        Remove-Item $path -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Write-Host ""
+Write-Host "=====================================" -ForegroundColor Green
+Write-Host " Uninstalls complete!" -ForegroundColor Green
+Write-Host " You can safely close this window." -ForegroundColor Green
+Write-Host "=====================================" -ForegroundColor Green
 
 Stop-Transcript

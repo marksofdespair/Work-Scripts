@@ -94,6 +94,41 @@ foreach ($App in $InstalledApps) {
     }
 }
 
+# I hate Dell 2.0
+Write-Host "Waiting for Dell Optimizer to fully uninstall..."
+
+$OptimizerPaths = @(
+"C:\Program Files\Dell\DellOptimizer",
+"C:\Program Files\Dell\Dell Optimizer",
+"C:\Program Files\Dell\Dell Optimizer Core"
+)
+
+$maxAttempts = 12  # ~1 minute total
+$attempt = 0
+
+while ($attempt -lt $maxAttempts) {
+
+    $stillExists = $false
+
+    foreach ($path in $OptimizerPaths) {
+        if (Test-Path $path) {
+            $stillExists = $true
+        }
+    }
+
+    if (-not $stillExists) {
+        Write-Host "Dell Optimizer fully removed."
+        break
+    }
+
+    Start-Sleep -Seconds 5
+    $attempt++
+}
+
+if ($stillExists) {
+    Write-Host "Optimizer still present after waiting, will attempt cleanup..."
+}
+
 Write-Host "Cleaning up leftover Dell directories..."
 
 $CleanupPaths = @(

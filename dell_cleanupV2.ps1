@@ -147,6 +147,36 @@ foreach ($path in $CleanupPaths) {
     }
 }
 
+# Dellware is officially the worst
+Write-Host "Cleaning up stale uninstall entries..."
+
+$UninstallKeys = Get-ItemProperty `
+    HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*, `
+    HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* `
+    -ErrorAction SilentlyContinue
+
+foreach ($key in $UninstallKeys) {
+
+    if ($key.DisplayName -like "*Optimizer*") {
+
+        $stillExists = $false
+
+        foreach ($path in $OptimizerPaths) {
+            if (Test-Path $path) {
+                $stillExists = $true
+            }
+        }
+
+        if (-not $stillExists) {
+            Write-Host "Removing stale entry: $($key.DisplayName)"
+            Remove-Item $key.PSPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        else {
+            Write-Host "Skipping registry removal, files still exist for $($key.DisplayName)"
+        }
+    }
+}
+
 Write-Host ""
 Write-Host "=====================================" -ForegroundColor Green
 Write-Host " Uninstalls complete!" -ForegroundColor Green
